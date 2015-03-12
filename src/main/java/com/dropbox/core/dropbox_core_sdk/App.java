@@ -30,8 +30,8 @@ public class App
             int code = _main(args);
             System.exit(code);
         }
-	public static int _main(String[] args)
-	        throws IOException
+	public static int _main(String[] args) 
+	        throws IOException 
 	    {
 		 
 		String mode = "";
@@ -146,7 +146,7 @@ public class App
                     dbxAccountInfo = dbxClient.getAccountInfo();
                 }
                 catch (DbxException ex) {
-                    System.out.println("Error in getSpaceInfo(): " + ex.getMessage());
+                    //System.out.println("Error in getSpaceInfo(): " + ex.getMessage());
                     //ex.printStackTrace();
                     return 1;
                 }
@@ -321,8 +321,8 @@ public class App
 	        			listing = dbxClient.getMetadataWithChildren(path1);
 	        			System.out.println("Files in the root path:");
 	        			for (DbxEntry child : listing.children) {
-	        			    System.out.println("	" + child.name + ": " + child.toString());
-	        			    //System.out.println("	" + child.name + ": " + child.path+" "+child.asFile().humanSize);
+	        			    System.out.println("	" + child.name + ": " );
+	        			    //System.out.println("	" + child.name + ": " + child.path+" ");
 	        			}
 	        		} catch (DbxException ex) {
 	        			System.out.println("Error in listing(): " + ex.getMessage());
