@@ -151,14 +151,16 @@ public class App
                     return 1;
                 }
                 System.out.println("space of : "+dbxAccountInfo.displayName);
-                
+                double totalmb = spacereadable(dbxAccountInfo.quota.total,"mb");
                 double total = spacereadable(dbxAccountInfo.quota.total,"gb");
+                double usedmb = spacereadable(dbxAccountInfo.quota.normal+dbxAccountInfo.quota.shared,"mb");
                 double used = spacereadable(dbxAccountInfo.quota.normal+dbxAccountInfo.quota.shared,"gb");
+                double freemb = totalmb-usedmb;
                 double free = total-used;
                 
-                System.out.println("total = "+total+" gb");
-                System.out.println("used = "+used+" gb");
-                System.out.println("free = "+free+" gb");
+                System.out.println("total = "+(int)total+" gb or "+(int)totalmb+" mb");
+                System.out.println("used = "+(int)used+" gb or "+(int)usedmb+" mb");
+                System.out.println("free = "+(int)free+" gb or "+(int)freemb+" mb");
                 return 0;
         	}
         	
@@ -406,9 +408,9 @@ public class App
                 catch (IOException ex) {
                     System.out.println("Eror reading from file \"" + path1 + "\": " + ex.getMessage());
                     return 1;
-                }
-
-                System.out.print(metadata.toStringMultiline());
+                }                
+                //System.out.print(metadata.toStringMultiline());
+                System.out.println("upload complete to "+path2);
                 return 0;
         	}
         	
@@ -427,7 +429,7 @@ public class App
                 } finally {
                     outputStream.close();
                 }
-                System.out.print("Metadata: " + downloadedFile.toStringMultiline());
+                //System.out.print("Metadata: " + downloadedFile.toStringMultiline());
                 System.out.println("download complete to "+path1);
                 return 0;
         	}
