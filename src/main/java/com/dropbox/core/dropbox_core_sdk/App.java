@@ -61,6 +61,7 @@ public class App
         		System.out.println(" -spaceper	<AuthFile> {show space in percent}");
         		System.out.println(" -authorize	<KeyFileIn> <AuthFileOut> {authorize Dropbox account}");
         		System.out.println(" -listing	<AuthFile> <path1> {show all file/folder in path1}");
+        		System.out.println(" -listingAll	<AuthFile> <path1> {show all file/folder in path1 with Recursive}");
         		System.out.println(" -delete	<AuthFile> <path1> {delete file/folder in path1}");
         		System.out.println(" -newfolder	<AuthFile> <path1> {create folder in path1}");
         		System.out.println(" -metadata	<AuthFile> <path1> {show information of file or folder}");
@@ -125,8 +126,8 @@ public class App
                 }
                 //System.out.print("User's account info: " + dbxAccountInfo.toStringMultiline());
                 System.out.println("User account info:");
-                System.out.println("user id = "+dbxAccountInfo.userId);
-                System.out.println("display name = "+dbxAccountInfo.displayName);
+                System.out.format("user id = %s\n ",dbxAccountInfo.userId);
+                System.out.format("display name = %s\n",dbxAccountInfo.displayName);
                 System.out.println("country = "+dbxAccountInfo.country);
                 System.out.println("referral link = "+dbxAccountInfo.referralLink);
                 double total = spacereadable(dbxAccountInfo.quota.total,"gb");
@@ -137,6 +138,32 @@ public class App
                 System.out.println("total = "+total+" gb");
                 System.out.println("used = "+used+" gb");
                 System.out.println("free = "+free+" gb");
+                return 0;
+        	}
+        	if(mode.equals("account3")){
+        		DbxAccountInfo dbxAccountInfo;
+                try {
+                    dbxAccountInfo = dbxClient.getAccountInfo();
+                }
+                catch (DbxException ex) {
+                    System.out.println("Error in getAccountInfo(): " + ex.getMessage());
+                    //ex.printStackTrace();
+                    return 1;
+                }
+                //System.out.print("User's account info: " + dbxAccountInfo.toStringMultiline());
+                //System.out.println("User account info:");
+                System.out.format("user id = %s\t ",dbxAccountInfo.userId);
+                System.out.format("display name = %s\n",dbxAccountInfo.displayName);
+                //System.out.println("country = "+dbxAccountInfo.country);
+                //System.out.println("referral link = "+dbxAccountInfo.referralLink);
+                //double total = spacereadable(dbxAccountInfo.quota.total,"gb");
+                //double used = spacereadable(dbxAccountInfo.quota.normal+dbxAccountInfo.quota.shared,"gb");
+                //double free = total-used;
+                //System.out.println("");
+                //System.out.println("User space:");
+                //System.out.println("total = "+total+" gb");
+                //System.out.println("used = "+used+" gb");
+                //System.out.println("free = "+free+" gb");
                 return 0;
         	}
         	
@@ -161,6 +188,29 @@ public class App
                 System.out.println("total = "+(int)total+" gb or "+(int)totalmb+" mb");
                 System.out.println("used = "+(int)used+" gb or "+(int)usedmb+" mb");
                 System.out.println("free = "+(int)free+" gb or "+(int)freemb+" mb");
+                return 0;
+        	}
+        	if(mode.equals("space2")){
+        		DbxAccountInfo dbxAccountInfo;
+                try {
+                    dbxAccountInfo = dbxClient.getAccountInfo();
+                }
+                catch (DbxException ex) {
+                    //System.out.println("Error in getSpaceInfo(): " + ex.getMessage());
+                    //ex.printStackTrace();
+                    return 1;
+                }
+                System.out.println("User space");
+                double totalmb = spacereadable(dbxAccountInfo.quota.total,"mb");
+                double total = spacereadable(dbxAccountInfo.quota.total,"gb");
+                double usedmb = spacereadable(dbxAccountInfo.quota.normal+dbxAccountInfo.quota.shared,"mb");
+                double used = spacereadable(dbxAccountInfo.quota.normal+dbxAccountInfo.quota.shared,"gb");
+                double freemb = totalmb-usedmb;
+                double free = total-used;
+                                
+                System.out.format("total = %d Mb\t",(int)totalmb);                
+                System.out.format("used = %d Mb\t",(int)usedmb);                
+                System.out.format("free = %d Mb\n",(int)freemb);
                 return 0;
         	}
         	
@@ -334,7 +384,38 @@ public class App
         		System.out.println("listing complete");
         		return 0;
         	}
-        	
+        	if(mode.equals("listing2")){
+        		try {
+					meta = dbxClient.getMetadata(path1);
+				} catch (DbxException ex) {
+        			System.out.println("Error : " + ex.getMessage());
+        			return 1;
+				}
+        		if(meta==null){
+        			System.out.println("not found file or folder in "+path1);
+        		}else{				
+	        		DbxEntry.WithChildren listing;
+	        		try {
+	        			listing = dbxClient.getMetadataWithChildren(path1);	        			
+	        			for (DbxEntry child : listing.children) {
+	        			    System.out.println(child.name);	        			    
+	        			}
+	        		} catch (DbxException ex) {
+	        			System.out.println("Error in listing(): " + ex.getMessage());
+	        			return 1;
+	        		}
+        		}        		
+        		return 0;
+        	}
+        	if(mode.equals("listingAll")){
+        		DbxEntry.WithChildren listing=null;
+				try {
+					listing = dbxClient.getMetadataWithChildren(path1);
+					listingAll(listing, dbxClient, 0);
+				} catch (DbxException e) {					
+					e.printStackTrace();
+				}
+        	}
         	if(mode.equals("delete")){
         		try {
 					dbxClient.delete(path1);
@@ -507,4 +588,23 @@ public class App
         out.println("  other example programs, such as the one in \"examples/account-info\".");
         out.println("");
     }
+	private static int listingAll(DbxEntry.WithChildren listing,DbxClient dbxClient,int depth){			
+		try {    			    			
+			for (DbxEntry child : listing.children) {    				
+				if(child.isFolder() && child!=null){
+					DbxEntry.WithChildren listing2 = dbxClient.getMetadataWithChildren(child.path);
+					if(depth < 5){
+						listingAll(listing2,dbxClient,depth+1);
+					}    					
+				}
+				else {
+					if(child.name!="") System.out.println(child.name);    					
+				}
+			}
+		} catch (DbxException ex) {
+			System.out.println("Error in listing(): " + ex.getMessage());
+			return 1;
+		}		
+	return 0;
+}
 }
